@@ -1,5 +1,5 @@
 """
-LLM 취약점 스캐너 — 스캔 엔진
+Vrompt — 스캔 엔진
 
 프로브 로딩 → API 호출 → 탐지 → 평가 파이프라인을 실행하는 핵심 엔진.
 """
@@ -37,7 +37,7 @@ PROBE_REGISTRY = {
 
 
 class Scanner:
-    """LLM 취약점 스캐너 엔진"""
+    """Vrompt 스캔 엔진"""
 
     def __init__(
         self,

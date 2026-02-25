@@ -1,5 +1,5 @@
 """
-LLM 취약점 스캐너 — API 클라이언트
+Vrompt — API 클라이언트
 
 타겟 LLM 챗봇의 REST API와 통신하는 모듈.
 Spring Boot 백엔드 기반 — JWT 인증 + /api/chat 엔드포인트

@@ -1,5 +1,5 @@
 """
-LLM 취약점 스캐너 — Probe 모듈
+Vrompt — Probe 모듈
 
 각 프로브는 BaseProbe를 상속하여 특정 취약점 카테고리의 프롬프트를 정의한다.
 """

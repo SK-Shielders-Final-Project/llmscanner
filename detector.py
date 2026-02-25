@@ -1,5 +1,5 @@
 """
-LLM 취약점 스캐너 — Detector 모듈
+Vrompt — Detector 모듈
 
 응답을 분석하여 취약점 존재 여부를 판별한다.
 Garak의 mitigation.py 에서 추출한 거부 키워드 + 카테고리별 위험 키워드 기반.

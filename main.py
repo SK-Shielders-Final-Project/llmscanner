@@ -1,10 +1,10 @@
 """
-LLM 취약점 스캐너 — CLI 진입점 (대화형 메뉴)
+Vrompt — LLM 취약점 스캐너 CLI
 
 사용법:
-  python main.py                    # 대화형 메뉴 실행
-  python main.py --all              # 직접 전체 스캔 실행 (비대화형)
-  python main.py --dry-run --all    # API 호출 없이 전체 프롬프트 확인
+  vrompt                             # 대화형 메뉴 실행
+  vrompt --all                       # 직접 전체 스캔 실행 (비대화형)
+  vrompt --dry-run --all             # API 호출 없이 전체 프롬프트 확인
 """
 
 import argparse
@@ -27,33 +27,19 @@ colorama_init(autoreset=True)
 def print_logo():
     logo = f"""
 {Fore.CYAN}{Style.BRIGHT}
-  ╔═══════════════════════════════════════════════════════════╗
-  ║                                                           ║
-  ║   ██╗     ██╗     ███╗   ███╗                             ║
-  ║   ██║     ██║     ████╗ ████║                             ║
-  ║   ██║     ██║     ██╔████╔██║                             ║
-  ║   ██║     ██║     ██║╚██╔╝██║                             ║
-  ║   ███████╗███████╗██║ ╚═╝ ██║                             ║
-  ║   ╚══════╝╚══════╝╚═╝     ╚═╝                             ║
-  ║                                                           ║
-  ║   {Fore.RED}██╗   ██╗██╗   ██╗██╗     ███╗   ██╗                   {Fore.CYAN}║
-  ║   {Fore.RED}██║   ██║██║   ██║██║     ████╗  ██║                   {Fore.CYAN}║
-  ║   {Fore.RED}██║   ██║██║   ██║██║     ██╔██╗ ██║                   {Fore.CYAN}║
-  ║   {Fore.RED}╚██╗ ██╔╝██║   ██║██║     ██║╚██╗██║                   {Fore.CYAN}║
-  ║   {Fore.RED} ╚████╔╝ ╚██████╔╝███████╗██║ ╚████║                   {Fore.CYAN}║
-  ║   {Fore.RED}  ╚═══╝   ╚═════╝ ╚══════╝╚═╝  ╚═══╝                   {Fore.CYAN}║
-  ║                                                           ║
-  ║   {Fore.YELLOW}███████╗ ██████╗ █████╗ ███╗   ██╗                   {Fore.CYAN}║
-  ║   {Fore.YELLOW}██╔════╝██╔════╝██╔══██╗████╗  ██║                   {Fore.CYAN}║
-  ║   {Fore.YELLOW}███████╗██║     ███████║██╔██╗ ██║                   {Fore.CYAN}║
-  ║   {Fore.YELLOW}╚════██║██║     ██╔══██║██║╚██╗██║                   {Fore.CYAN}║
-  ║   {Fore.YELLOW}███████║╚██████╗██║  ██║██║ ╚████║                   {Fore.CYAN}║
-  ║   {Fore.YELLOW}╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝                   {Fore.CYAN}║
-  ║                                                           ║
-  ║   {Fore.WHITE}LLM Vulnerability Scanner v1.0{Fore.CYAN}                        ║
-  ║   {Fore.WHITE}Inspired by NVIDIA Garak{Fore.CYAN}                              ║
-  ║                                                           ║
-  ╚═══════════════════════════════════════════════════════════╝
+  ╔═══════════════════════════════════════════════════════════════╗
+  ║                                                               ║
+  ║   {Fore.RED}██╗   ██╗{Fore.YELLOW}██████╗  {Fore.GREEN}██████╗ {Fore.CYAN}███╗   ███╗{Fore.MAGENTA}██████╗ {Fore.WHITE}████████╗{Fore.CYAN}  ║
+  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██╔══██╗{Fore.GREEN}██╔═══██╗{Fore.CYAN}████╗ ████║{Fore.MAGENTA}██╔══██╗{Fore.WHITE}╚══██╔══╝{Fore.CYAN}  ║
+  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██████╔╝{Fore.GREEN}██║   ██║{Fore.CYAN}██╔████╔██║{Fore.MAGENTA}██████╔╝{Fore.WHITE}   ██║   {Fore.CYAN}  ║
+  ║   {Fore.RED}╚██╗ ██╔╝{Fore.YELLOW}██╔══██╗{Fore.GREEN}██║   ██║{Fore.CYAN}██║╚██╔╝██║{Fore.MAGENTA}██╔═══╝ {Fore.WHITE}   ██║   {Fore.CYAN}  ║
+  ║   {Fore.RED} ╚████╔╝ {Fore.YELLOW}██║  ██║{Fore.GREEN}╚██████╔╝{Fore.CYAN}██║ ╚═╝ ██║{Fore.MAGENTA}██║     {Fore.WHITE}   ██║   {Fore.CYAN}  ║
+  ║   {Fore.RED}  ╚═══╝  {Fore.YELLOW}╚═╝  ╚═╝{Fore.GREEN} ╚═════╝ {Fore.CYAN}╚═╝     ╚═╝{Fore.MAGENTA}╚═╝     {Fore.WHITE}   ╚═╝   {Fore.CYAN}  ║
+  ║                                                               ║
+  ║   {Fore.WHITE}LLM Vulnerability Scanner v1.0{Fore.CYAN}                            ║
+  ║   {Fore.WHITE}Inspired by NVIDIA Garak{Fore.CYAN}                                  ║
+  ║                                                               ║
+  ╚═══════════════════════════════════════════════════════════════╝
 {Style.RESET_ALL}"""
     print(logo)
 
@@ -360,14 +346,15 @@ def interactive_menu():
 # ═══════════════════════════════════════════════════════════════
 def main():
     parser = argparse.ArgumentParser(
-        description="LLM 취약점 스캐너 — Garak 기반 경량 스캔 도구",
+        prog="vrompt",
+        description="Vrompt — LLM 취약점 스캐너 (Garak 기반 경량 스캔 도구)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 인자 없이 실행하면 대화형 메뉴가 표시됩니다.
 비대화형 모드 예시:
-  python main.py --all                          전체 스캔
-  python main.py --probe jailbreak unethical    특정 카테고리만
-  python main.py --dry-run --all                프롬프트만 확인
+  vrompt --all                          전체 스캔
+  vrompt --probe jailbreak unethical    특정 카테고리만
+  vrompt --dry-run --all                프롬프트만 확인
         """,
     )
     parser.add_argument("--target-url", type=str, default=None)
