@@ -4,6 +4,7 @@ Vrompt — 스캔 엔진
 프로브 로딩 → API 호출 → 탐지 → 평가 파이프라인을 실행하는 핵심 엔진.
 """
 
+import os
 import sys
 import time
 from typing import List, Optional
@@ -55,10 +56,17 @@ class Scanner:
     ):
         self.target_url = target_url or APIClient.DEFAULT_URL
         self.dry_run = dry_run
-        self.output_path = output_path or f"scan_report_{time.strftime('%Y%m%d_%H%M%S')}.md"
         self.delay = delay
         self.timeout = timeout
         self.verify_ssl = verify_ssl
+
+        # 리포트 저장 경로 (reports/ 폴더)
+        if output_path:
+            self.output_path = output_path
+        else:
+            reports_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reports")
+            os.makedirs(reports_dir, exist_ok=True)
+            self.output_path = os.path.join(reports_dir, f"scan_report_{time.strftime('%Y%m%d_%H%M%S')}.md")
 
         # API 클라이언트 설정
         if dry_run:

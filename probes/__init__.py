@@ -6,6 +6,8 @@ Vrompt — Probe 모듈
 
 from dataclasses import dataclass, field
 from typing import List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 import time
 
 
@@ -40,53 +42,70 @@ class BaseProbe:
         """프롬프트 목록 반환"""
         return self.prompts
 
-    def run(self, api_client, detector, progress_callback=None) -> List[ProbeResult]:
+    def _process_single(self, prompt, api_client, detector):
+        """단일 프롬프트 처리 (스레드에서 실행)"""
+        start_time = time.time()
+        try:
+            response = api_client.send(prompt)
+        except Exception as e:
+            response = f"[ERROR] {str(e)}"
+
+        elapsed = time.time() - start_time
+
+        is_vuln, detail = detector.analyze(
+            prompt=prompt,
+            response=response,
+            triggers=self.triggers,
+            category=self.category,
+        )
+
+        return ProbeResult(
+            probe_name=self.name,
+            category=self.category,
+            prompt=prompt,
+            response=response,
+            is_vulnerable=is_vuln,
+            detection_detail=detail,
+            severity=self.severity if is_vuln else "INFO",
+            elapsed_time=elapsed,
+        )
+
+    def run(self, api_client, detector, progress_callback=None, max_workers=10) -> List[ProbeResult]:
         """
-        프로브 실행: 모든 프롬프트를 API에 전송 후 탐지 결과 반환
+        프로브 실행: 멀티스레드로 프롬프트를 API에 전송 후 탐지 결과 반환
 
         Args:
             api_client: API 호출 클라이언트
             detector: 응답 분석 디텍터
             progress_callback: 진행도 콜백 함수(current, total, result)
+            max_workers: 동시 실행 스레드 수 (기본 10)
 
         Returns:
             ProbeResult 리스트
         """
-        results = []
         prompts = self.get_prompts()
         total = len(prompts)
 
-        for idx, prompt in enumerate(prompts, 1):
-            start_time = time.time()
-            try:
-                response = api_client.send(prompt)
-            except Exception as e:
-                response = f"[ERROR] {str(e)}"
+        # 결과를 인덱스 순으로 저장
+        results = [None] * total
+        lock = threading.Lock()
+        completed = [0]  # mutable counter for closure
 
-            elapsed = time.time() - start_time
+        def task(idx, prompt):
+            result = self._process_single(prompt, api_client, detector)
+            with lock:
+                results[idx] = result
+                completed[0] += 1
+                if progress_callback:
+                    progress_callback(completed[0], total, result)
+            return result
 
-            # 탐지 수행
-            is_vuln, detail = detector.analyze(
-                prompt=prompt,
-                response=response,
-                triggers=self.triggers,
-                category=self.category,
-            )
-
-            result = ProbeResult(
-                probe_name=self.name,
-                category=self.category,
-                prompt=prompt,
-                response=response,
-                is_vulnerable=is_vuln,
-                detection_detail=detail,
-                severity=self.severity if is_vuln else "INFO",
-                elapsed_time=elapsed,
-            )
-            results.append(result)
-
-            # 진행도 콜백 호출
-            if progress_callback:
-                progress_callback(idx, total, result)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(task, idx, prompt): idx
+                for idx, prompt in enumerate(prompts)
+            }
+            for future in as_completed(futures):
+                future.result()  # 예외 전파
 
         return results
