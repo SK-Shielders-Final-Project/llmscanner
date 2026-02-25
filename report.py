@@ -131,17 +131,20 @@ def generate_report(
             # 프롬프트
             prompt_display = r.prompt if len(r.prompt) <= 500 else r.prompt[:500] + "..."
             lines.append("**📨 프롬프트:**")
-            lines.append(f"```")
+            lines.append("````")
             lines.append(prompt_display)
-            lines.append(f"```\n")
+            lines.append("````\n")
 
-            # 응답
+            # 응답 — 내부 백틱(```) 이스케이프 처리
             resp_text = r.response or "(응답 없음)"
             resp_display = resp_text if len(resp_text) <= 800 else resp_text[:800] + "..."
+            # 4+ 연속 백틱을 제거하여 코드 펜스 깨짐 방지
+            resp_display = resp_display.replace("````", "'''")
+            resp_display = resp_display.replace("```", "'''")
             lines.append("**💬 응답:**")
-            lines.append(f"```")
+            lines.append("````")
             lines.append(resp_display)
-            lines.append(f"```\n")
+            lines.append("````\n")
 
             # 취약점 상세 (취약한 경우)
             if r.is_vulnerable:
