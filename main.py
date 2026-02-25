@@ -29,15 +29,15 @@ def print_logo():
 {Fore.CYAN}{Style.BRIGHT}
   ╔═══════════════════════════════════════════════════════════════╗
   ║                                                               ║
-  ║   {Fore.RED}██╗   ██╗{Fore.YELLOW}██████╗  {Fore.GREEN}██████╗ {Fore.CYAN}███╗   ███╗{Fore.MAGENTA}██████╗ {Fore.WHITE}████████╗{Fore.CYAN}  ║
-  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██╔══██╗{Fore.GREEN}██╔═══██╗{Fore.CYAN}████╗ ████║{Fore.MAGENTA}██╔══██╗{Fore.WHITE}╚══██╔══╝{Fore.CYAN}  ║
-  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██████╔╝{Fore.GREEN}██║   ██║{Fore.CYAN}██╔████╔██║{Fore.MAGENTA}██████╔╝{Fore.WHITE}   ██║   {Fore.CYAN}  ║
-  ║   {Fore.RED}╚██╗ ██╔╝{Fore.YELLOW}██╔══██╗{Fore.GREEN}██║   ██║{Fore.CYAN}██║╚██╔╝██║{Fore.MAGENTA}██╔═══╝ {Fore.WHITE}   ██║   {Fore.CYAN}  ║
-  ║   {Fore.RED} ╚████╔╝ {Fore.YELLOW}██║  ██║{Fore.GREEN}╚██████╔╝{Fore.CYAN}██║ ╚═╝ ██║{Fore.MAGENTA}██║     {Fore.WHITE}   ██║   {Fore.CYAN}  ║
-  ║   {Fore.RED}  ╚═══╝  {Fore.YELLOW}╚═╝  ╚═╝{Fore.GREEN} ╚═════╝ {Fore.CYAN}╚═╝     ╚═╝{Fore.MAGENTA}╚═╝     {Fore.WHITE}   ╚═╝   {Fore.CYAN}  ║
+  ║   {Fore.RED}██╗   ██╗{Fore.YELLOW}██████╗  {Fore.GREEN}██████╗ {Fore.CYAN}███╗   ███╗{Fore.MAGENTA}██████╗ {Fore.WHITE}████████╗{Fore.CYAN}      ║
+  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██╔══██╗{Fore.GREEN}██╔═══██╗{Fore.CYAN}████╗ ████║{Fore.MAGENTA}██╔══██╗{Fore.WHITE}╚══██╔══╝{Fore.CYAN}      ║
+  ║   {Fore.RED}██║   ██║{Fore.YELLOW}██████╔╝{Fore.GREEN}██║   ██║{Fore.CYAN}██╔████╔██║{Fore.MAGENTA}██████╔╝{Fore.WHITE}   ██║   {Fore.CYAN}      ║
+  ║   {Fore.RED}╚██╗ ██╔╝{Fore.YELLOW}██╔══██╗{Fore.GREEN}██║   ██║{Fore.CYAN}██║╚██╔╝██║{Fore.MAGENTA}██╔═══╝ {Fore.WHITE}   ██║   {Fore.CYAN}      ║
+  ║   {Fore.RED} ╚████╔╝ {Fore.YELLOW}██║  ██║{Fore.GREEN}╚██████╔╝{Fore.CYAN}██║ ╚═╝ ██║{Fore.MAGENTA}██║     {Fore.WHITE}   ██║   {Fore.CYAN}      ║
+  ║   {Fore.RED}  ╚═══╝  {Fore.YELLOW}╚═╝  ╚═╝{Fore.GREEN} ╚═════╝ {Fore.CYAN}╚═╝     ╚═╝{Fore.MAGENTA}╚═╝     {Fore.WHITE}   ╚═╝   {Fore.CYAN}      ║
   ║                                                               ║
-  ║   {Fore.WHITE}LLM Vulnerability Scanner v1.0{Fore.CYAN}                            ║
-  ║   {Fore.WHITE}Inspired by NVIDIA Garak{Fore.CYAN}                                  ║
+  ║   {Fore.WHITE}LLM Vulnerability Scanner v1.0{Fore.CYAN}                              ║
+  ║                                                               ║
   ║                                                               ║
   ╚═══════════════════════════════════════════════════════════════╝
 {Style.RESET_ALL}"""
