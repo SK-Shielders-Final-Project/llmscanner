@@ -94,6 +94,7 @@ def generate_report(
         "encoding": "🔢 인코딩 우회",
         "hallucination": "👻 환각/허위정보",
         "code_generation": "💻 악성 코드 생성",
+        "special_tokens": "🔤 특수 토큰 공격",
     }
 
     for cat_key, cat_data in categories.items():

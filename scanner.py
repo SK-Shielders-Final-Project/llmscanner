@@ -21,6 +21,7 @@ from probes.data_leakage import DataLeakageProbe
 from probes.encoding import EncodingProbe
 from probes.hallucination import HallucinationProbe
 from probes.code_generation import CodeGenerationProbe
+from probes.special_tokens import SpecialTokensProbe
 from report import generate_report
 
 colorama_init(autoreset=True)
@@ -34,6 +35,7 @@ PROBE_REGISTRY = {
     "encoding": EncodingProbe,
     "hallucination": HallucinationProbe,
     "code_generation": CodeGenerationProbe,
+    "special_tokens": SpecialTokensProbe,
 }
 
 

@@ -2,13 +2,27 @@
 Vrompt — Probe 모듈
 
 각 프로브는 BaseProbe를 상속하여 특정 취약점 카테고리의 프롬프트를 정의한다.
+프롬프트 데이터는 data.json에서 로딩한다.
 """
 
-from dataclasses import dataclass, field
+import json
+import os
+from dataclasses import dataclass
 from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import time
+
+# data.json 경로
+_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data.json")
+
+def _load_data():
+    """data.json 전체 로딩"""
+    with open(_DATA_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+# 모듈 로딩 시 한 번만 읽기
+PROBE_DATA = _load_data()
 
 
 @dataclass
@@ -37,6 +51,16 @@ class BaseProbe:
 
     # 트리거 키워드: 응답에 이 키워드가 포함되면 취약
     triggers: List[str] = []
+
+    def __init__(self):
+        """data.json에서 카테고리에 맞는 데이터 로딩"""
+        if self.category in PROBE_DATA:
+            data = PROBE_DATA[self.category]
+            self.name = data.get("name", self.name)
+            self.description = data.get("description", self.description)
+            self.severity = data.get("severity", self.severity)
+            self.triggers = data.get("triggers", self.triggers)
+            self.prompts = data.get("prompts", self.prompts)
 
     def get_prompts(self) -> List[str]:
         """프롬프트 목록 반환"""
