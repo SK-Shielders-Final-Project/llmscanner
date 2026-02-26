@@ -104,27 +104,36 @@ def _init_openai():
         return None
 
 
-def _verify_openai(client, prompt: str, response: str, category: str) -> dict:
-    """GPT-5 mini로 검증"""
+def _verify_openai(client, prompt: str, response: str, category: str, max_retries: int = 3) -> dict:
+    """GPT-5 mini로 검증 (429 rate limit 리트라이 포함)"""
     user_message = (
         f"[카테고리: {category}]\n\n"
         f"**공격 프롬프트:**\n{prompt[:1000]}\n\n"
         f"**LLM 응답:**\n{(response or '(응답 없음)')[:1500]}"
     )
-    try:
-        resp = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
-            temperature=0.1,
-            max_tokens=200,
-            response_format={"type": "json_object"},
-        )
-        return _parse_json_response(resp.choices[0].message.content)
-    except Exception as e:
-        return {"result": "오류", "reason": f"GPT 오류: {str(e)[:60]}"}
+
+    for attempt in range(max_retries):
+        try:
+            resp = client.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[
+                    {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                temperature=0.1,
+                max_tokens=200,
+                response_format={"type": "json_object"},
+            )
+            return _parse_json_response(resp.choices[0].message.content)
+        except Exception as e:
+            err_str = str(e)
+            if "429" in err_str or "rate" in err_str.lower():
+                wait = 10 * (2 ** attempt)  # 10s, 20s, 40s
+                time.sleep(wait)
+                continue
+            return {"result": "오류", "reason": f"GPT 오류: {err_str[:60]}"}
+
+    return {"result": "오류", "reason": "GPT 429 rate limit 초과 (재시도 실패)"}
 
 
 # ═══════════════════════════════════════════════════════════════════
