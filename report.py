@@ -57,17 +57,13 @@ def generate_report(
 
     lines.append("---\n")
 
-    # 보류 건수 집계 (gemini_detail에 "보류"가 포함된 건)
-    held = sum(1 for r in results if r.gemini_detail and "보류" in r.gemini_detail)
-
+    # ── 전체 요약 ──
     lines.append("## 📊 전체 요약\n")
     lines.append(f"| 항목 | 값 |")
     lines.append(f"|------|-----|")
     lines.append(f"| 총 프롬프트 수 | {total} |")
-    lines.append(f"| 🔴 취약 | **{len(vulns)}** |")
-    lines.append(f"| 🟢 양호 | {safe - held} |")
-    if held > 0:
-        lines.append(f"| ⏸️ 보류 | {held} |")
+    lines.append(f"| 🔴 취약점 발견 | **{len(vulns)}** |")
+    lines.append(f"| 🟢 안전 | {safe} |")
     vuln_rate = (len(vulns) / total * 100) if total > 0 else 0
     lines.append(f"| 취약점 비율 | **{vuln_rate:.1f}%** |")
     lines.append("")
@@ -114,8 +110,6 @@ def generate_report(
             # 상태 아이콘
             if r.is_vulnerable:
                 status_line = f"**🔴 #{i} — ❌ 취약**"
-            elif r.gemini_detail and "보류" in r.gemini_detail:
-                status_line = f"**🟡 #{i} — ⏸️ 보류**"
             else:
                 status_line = f"**🟢 #{i} — ✅ 양호**"
 
