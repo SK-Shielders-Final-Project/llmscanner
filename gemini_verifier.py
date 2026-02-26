@@ -108,7 +108,7 @@ def _verify_single(client, prompt: str, response: str, category: str) -> dict:
 
 def verify_results(results: List, delay: float = 4.0) -> List:
     """
-    1차 탐지에서 "취약"으로 판정된 결과를 Gemini로 2차 검증.
+    모든 프롬프트-응답 쌍을 Gemini로 2차 검증.
 
     Args:
         results: ProbeResult 리스트
@@ -121,17 +121,15 @@ def verify_results(results: List, delay: float = 4.0) -> List:
         print(f"{Fore.YELLOW}⚠ GEMINI_API_KEY가 설정되지 않았습니다. 2차 검증을 건너뜁니다.{Style.RESET_ALL}")
         return results
 
-    # 취약 판정 건만 추출
-    vuln_indices = [i for i, r in enumerate(results) if r.is_vulnerable]
-
-    if not vuln_indices:
-        print(f"\n{Fore.GREEN}✓ 취약 판정 건이 없어 2차 검증을 건너뜁니다.{Style.RESET_ALL}")
+    if not results:
         return results
+
+    total = len(results)
 
     print(f"\n{'═' * 70}")
     print(f"\n{Fore.CYAN}{Style.BRIGHT}🤖 Gemini 2차 검증 시작{Style.RESET_ALL}")
     print(f"   모델: {GEMINI_MODEL}")
-    print(f"   검증 대상: {len(vuln_indices)}건 (취약 판정만)")
+    print(f"   검증 대상: {total}건 (전체 프롬프트)")
     print(f"   모드: 싱글스레드 (무료 티어 대응)")
     print(f"   요청 간 딜레이: {delay}초\n")
 
@@ -139,48 +137,64 @@ def verify_results(results: List, delay: float = 4.0) -> List:
     if client is None:
         return results
 
-    flipped = 0
+    flipped = 0       # 취약 → 양호 보정
+    confirmed_vuln = 0 # 취약 유지
+    confirmed_safe = 0 # 양호 확인
     errors = 0
     verify_start = time.time()
 
-    for seq, idx in enumerate(vuln_indices, 1):
-        r = results[idx]
+    for seq, r in enumerate(results, 1):
         prompt_preview = r.prompt[:30].replace('\n', ' ')
 
         # 프로그레스
         bar_len = 20
-        filled = int(bar_len * seq / len(vuln_indices))
+        filled = int(bar_len * seq / total)
         bar = f"{Fore.MAGENTA}{'█' * filled}{Fore.WHITE}{'░' * (bar_len - filled)}{Style.RESET_ALL}"
-        pct = seq / len(vuln_indices) * 100
+        pct = seq / total * 100
         print(
-            f"\r   {bar} {seq}/{len(vuln_indices)} ({pct:5.1f}%) "
+            f"\r   {bar} {seq}/{total} ({pct:5.1f}%) "
             f"🔍 {prompt_preview}...{'':10}",
             end="", flush=True
         )
 
         verdict = _verify_single(client, r.prompt, r.response, r.category)
 
-        if verdict["result"] == "양호":
-            # 취약 → 양호로 보정
-            r.is_vulnerable = False
-            r.gemini_detail = f"✅ 양호 — {verdict['reason']}"
-            flipped += 1
+        if r.is_vulnerable:
+            if verdict["result"] == "양호":
+                # 취약 → 양호로 보정
+                r.is_vulnerable = False
+                r.gemini_detail = f"✅ 양호 — {verdict['reason']}"
+                flipped += 1
+            else:
+                # 취약 유지
+                r.gemini_detail = f"❌ 취약 — {verdict['reason']}"
+                confirmed_vuln += 1
         else:
-            # 취약 유지
-            r.gemini_detail = f"❌ 취약 — {verdict['reason']}"
+            if verdict["result"] == "취약":
+                # 양호 → 취약으로 상향 (Gemini가 놓친 취약점 발견)
+                r.is_vulnerable = True
+                r.gemini_detail = f"❌ 취약 — {verdict['reason']}"
+                confirmed_vuln += 1
+            else:
+                # 양호 확인
+                r.gemini_detail = f"✅ 양호 — {verdict['reason']}"
+                confirmed_safe += 1
 
         # 무료 티어 rate limit 대응: 딜레이
-        if seq < len(vuln_indices):
+        if seq < total:
             time.sleep(delay)
 
     verify_elapsed = time.time() - verify_start
     print()  # 줄바꿈
     print(f"\n{Style.BRIGHT}📊 Gemini 2차 검증 완료{Style.RESET_ALL}")
-    print(f"   검증 수:     {len(vuln_indices)}건")
+    print(f"   검증 수:     {total}건")
     print(f"   소요 시간:   {verify_elapsed:.1f}초")
-    print(f"   {Fore.GREEN}✓ 양호로 보정: {flipped}건{Style.RESET_ALL}")
-    print(f"   {Fore.RED}✗ 취약 유지:   {len(vuln_indices) - flipped - errors}건{Style.RESET_ALL}")
+    if flipped > 0:
+        print(f"   {Fore.GREEN}↻ 취약→양호 보정: {flipped}건{Style.RESET_ALL}")
+    print(f"   {Fore.RED}✗ 취약 판정:   {confirmed_vuln}건{Style.RESET_ALL}")
+    print(f"   {Fore.GREEN}✓ 양호 판정:   {confirmed_safe}건{Style.RESET_ALL}")
     if errors > 0:
         print(f"   {Fore.YELLOW}⚠ 검증 오류:   {errors}건{Style.RESET_ALL}")
 
     return results
+
