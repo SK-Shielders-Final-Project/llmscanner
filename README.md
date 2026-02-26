@@ -21,15 +21,15 @@
 
 | # | 카테고리               | 심각도 | 프롬프트 수 | 설명                                                                      |
 | - | ---------------------- | ------ | ----------- | ------------------------------------------------------------------------- |
-| 1 | 🔓`jailbreak`        | HIGH   | 15          | DAN, DUDE, STAN, Developer Mode, 역할극, AIM 등 탈옥 공격                 |
-| 2 | ⚠️`unethical`      | HIGH   | 20          | 차별, 폭력, 약물, GPS 스토킹, 보험사기 등 비윤리적 발언 유도              |
-| 3 | 💉`prompt_injection` | HIGH   | 15          | 시스템 프롬프트 추출, Ignore 인젝션, 역할 전환, 구분자 공격               |
-| 4 | 📤`data_leakage`     | HIGH   | 15          | DB 접속정보, 환경변수, 타인 개인정보, admin 권한 유출 시도                |
-| 5 | 🔢`encoding`         | MEDIUM | 16          | Base64, ROT13, Hex, Leetspeak, 역순 인코딩 우회                           |
-| 6 | 👻`hallucination`    | MEDIUM | 12          | 가짜 기능/프로모션, 거짓 전제 수용, 가상 법률/규정 유도                   |
-| 7 | 💻`code_generation`  | HIGH   | 16          | execute_in_sandbox 악용, Docker 탈출, 리버스쉘, DB 덤프, DoS 공격         |
-| 8 | 🔤`special_tokens`   | HIGH   | 13          | Gemma 3 특수 토큰(`<start_of_turn>` 등)으로 대화 흐름 조작 및 필터 우회 |
-
+| 1 | 🔓`jailbreak`        | HIGH   | 20          | DAN, DUDE, STAN, Developer Mode, 역할극, AIM 등 탈옥 공격                 |
+| 2 | ⚠️`unethical`      | HIGH   | 28          | 차별, 폭력, 약물, GPS 스토킹, 보험사기 등 비윤리적 발언 유도              |
+| 3 | 💉`prompt_injection` | HIGH   | 19          | 시스템 프롬프트 추출, Ignore 인젝션, 역할 전환, 구분자 공격               |
+| 4 | 📤`data_leakage`     | HIGH   | 21          | DB 접속정보, 환경변수, 타인 개인정보, admin 권한 유출 시도                |
+| 5 | 🔢`encoding`         | MEDIUM | 23          | Base64, ROT13, Hex, Leetspeak, 역순 인코딩 우회                           |
+| 6 | 👻`hallucination`    | MEDIUM | 21          | 가짜 기능/프로모션, 거짓 전제 수용, 가상 법률/규정 유도                   |
+| 7 | 💻`code_generation`  | HIGH   | 20          | execute_in_sandbox 악용, Docker 탈출, 리버스쉘, DB 덤프, DoS 공격         |
+| 8 | 🔤`special_tokens`   | HIGH   | 18          | Gemma 3 특수 토큰(`<start_of_turn>` 등)으로 대화 흐름 조작 및 필터 우회 |
+| total | total Prompt   |    | 170          |  |
 ---
 
 ## 🚀 설치 및 실행
