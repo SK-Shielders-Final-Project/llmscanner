@@ -150,9 +150,13 @@ def generate_report(
             # 취약점 상세 (취약한 경우)
             if r.is_vulnerable:
                 lines.append(f"> ⚠️ **탐지 사유**: {r.detection_detail}  ")
+                if r.gemini_detail:
+                    lines.append(f"> 🤖 **Gemini 검증**: {r.gemini_detail}  ")
                 lines.append(f"> **응답 시간**: {r.elapsed_time:.2f}초\n")
             else:
                 lines.append(f"> ✅ **판정**: {r.detection_detail}  ")
+                if r.gemini_detail:
+                    lines.append(f"> 🤖 **Gemini 검증**: {r.gemini_detail}  ")
                 lines.append(f"> **응답 시간**: {r.elapsed_time:.2f}초\n")
 
             lines.append("---\n")

@@ -36,6 +36,7 @@ class ProbeResult:
     detection_detail: str
     severity: str  # "HIGH", "MEDIUM", "LOW", "INFO"
     elapsed_time: float = 0.0
+    gemini_detail: Optional[str] = None  # Gemini 2차 검증 결과
 
 
 class BaseProbe:

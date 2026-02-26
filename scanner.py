@@ -23,6 +23,7 @@ from probes.hallucination import HallucinationProbe
 from probes.code_generation import CodeGenerationProbe
 from probes.special_tokens import SpecialTokensProbe
 from report import generate_report
+from gemini_verifier import verify_results
 
 colorama_init(autoreset=True)
 
@@ -151,7 +152,7 @@ class Scanner:
                     end="", flush=True
                 )
 
-            results = probe.run(self.client, self.detector, progress_callback=progress_callback)
+            results = probe.run(self.client, self.detector, progress_callback=progress_callback, max_workers=1)
             all_results.extend(results)
             print()  # 프로그레스 바 줄바꿈
 
@@ -179,8 +180,12 @@ class Scanner:
 
         scan_elapsed = time.time() - scan_start
 
+        # ── Gemini 2차 검증 (취약 판정 건만) ──
+        if not self.dry_run:
+            all_results = verify_results(all_results, delay=4.0)
+
         # ── 최종 요약 ──
-        print(f"{'═' * 70}")
+        print(f"\n{'═' * 70}")
         self._print_summary(all_results, scan_elapsed)
 
         # ── 리포트 저장 ──
