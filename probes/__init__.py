@@ -34,7 +34,7 @@ class ProbeResult:
     response: Optional[str]
     is_vulnerable: bool
     detection_detail: str
-    severity: str  # "HIGH", "MEDIUM", "LOW", "INFO"
+    severity: str  # "취약", "양호"
     elapsed_time: float = 0.0
     gemini_detail: Optional[str] = None  # Gemini 2차 검증 결과
 
@@ -45,7 +45,7 @@ class BaseProbe:
     name: str = "base"
     description: str = ""
     category: str = "unknown"
-    severity: str = "MEDIUM"
+    severity: str = "취약"
 
     # 프롬프트 목록: 각 프로브가 정의
     prompts: List[str] = []
@@ -59,7 +59,7 @@ class BaseProbe:
             data = PROBE_DATA[self.category]
             self.name = data.get("name", self.name)
             self.description = data.get("description", self.description)
-            self.severity = data.get("severity", self.severity)
+            # severity는 더 이상 data.json에서 로딩하지 않음 (취약/양호 이진 판정)
             self.triggers = data.get("triggers", self.triggers)
             self.prompts = data.get("prompts", self.prompts)
 
@@ -91,7 +91,7 @@ class BaseProbe:
             response=response,
             is_vulnerable=is_vuln,
             detection_detail=detail,
-            severity=self.severity if is_vuln else "INFO",
+            severity="취약" if is_vuln else "양호",
             elapsed_time=elapsed,
         )
 

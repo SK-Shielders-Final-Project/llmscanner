@@ -68,19 +68,6 @@ def generate_report(
     lines.append(f"| 취약점 비율 | **{vuln_rate:.1f}%** |")
     lines.append("")
 
-    # ── 심각도별 분류 ──
-    severity_counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
-    for r in vulns:
-        severity_counts[r.severity] = severity_counts.get(r.severity, 0) + 1
-
-    lines.append("### 심각도 분포\n")
-    lines.append("| 심각도 | 건수 |")
-    lines.append("|--------|------|")
-    for sev in ["HIGH", "MEDIUM", "LOW"]:
-        icon = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(sev, "⚪")
-        lines.append(f"| {icon} {sev} | {severity_counts.get(sev, 0)} |")
-    lines.append("")
-
     lines.append("---\n")
 
     # ── 카테고리별 전체 결과 (프롬프트 + 응답 포함) ──
@@ -122,10 +109,9 @@ def generate_report(
         for i, r in enumerate(cat_data["results"], 1):
             # 상태 아이콘
             if r.is_vulnerable:
-                sev_icon = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(r.severity, "⚪")
-                status_line = f"**{sev_icon} #{i} — ❌ 취약 ({r.severity})**"
+                status_line = f"**🔴 #{i} — ❌ 취약**"
             else:
-                status_line = f"**🟢 #{i} — ✅ 안전**"
+                status_line = f"**🟢 #{i} — ✅ 양호**"
 
             lines.append(f"#### {status_line}\n")
 
@@ -169,16 +155,15 @@ def generate_report(
     # ── 취약점 요약 테이블 (취약점이 있을 때) ──
     if vulns:
         lines.append("## 🚨 발견된 취약점 요약\n")
-        lines.append("| # | 카테고리 | 심각도 | 탐지 사유 | 프롬프트 (요약) |")
-        lines.append("|---|----------|--------|-----------|----------------|")
+        lines.append("| # | 카테고리 | 판정 | 탐지 사유 | 프롬프트 (요약) |")
+        lines.append("|---|----------|------|-----------|----------------|")
         for i, r in enumerate(vulns, 1):
-            sev_icon = {"HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(r.severity, "⚪")
             cat_display = CATEGORY_NAMES.get(r.category, r.category)
             prompt_short = r.prompt[:60].replace("|", "\\|").replace("\n", " ")
             if len(r.prompt) > 60:
                 prompt_short += "..."
             detail_short = (r.detection_detail or "")[:50]
-            lines.append(f"| {i} | {cat_display} | {sev_icon} {r.severity} | {detail_short} | {prompt_short} |")
+            lines.append(f"| {i} | {cat_display} | 🔴 취약 | {detail_short} | {prompt_short} |")
         lines.append("")
         lines.append("---\n")
 
@@ -186,8 +171,7 @@ def generate_report(
     lines.append("## 🛡️ 권고사항\n")
     if len(vulns) > 0:
         lines.append("취약점이 발견되었습니다. 다음 조치를 권고합니다:\n")
-        if severity_counts.get("HIGH", 0) > 0:
-            lines.append("1. **[긴급]** HIGH 심각도 취약점에 대한 즉시 패치 적용")
+        lines.append("1. **[긴급]** 발견된 취약점에 대한 즉시 패치 적용")
         lines.append("2. 시스템 프롬프트에 명시적 거부 지침 강화")
         lines.append("3. 입력 필터링 및 출력 검증 레이어 추가")
         lines.append("4. 인코딩된 입력에 대한 사전 디코딩 + 필터링 적용")

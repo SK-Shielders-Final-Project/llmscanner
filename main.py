@@ -90,18 +90,14 @@ def print_menu():
 def list_probes():
     """프로브 목록 출력"""
     print(f"\n{Style.BRIGHT}📋 사용 가능한 프로브 목록{Style.RESET_ALL}\n")
-    print(f"  {'번호':<6} {'이름':<20} {'심각도':<8} {'프롬프트수':<10} 설명")
-    print(f"  {'─' * 4}  {'─' * 20} {'─' * 8} {'─' * 10} {'─' * 35}")
+    print(f"  {'번호':<6} {'이름':<20} {'프롬프트수':<10} 설명")
+    print(f"  {'─' * 4}  {'─' * 20} {'─' * 10} {'─' * 35}")
     for i, (name, cls) in enumerate(PROBE_REGISTRY.items(), 1):
         probe = cls()
         prompt_count = len(probe.get_prompts())
-        sev_color = {
-            "HIGH": Fore.RED, "MEDIUM": Fore.YELLOW, "LOW": Fore.GREEN,
-        }.get(probe.severity, "")
         print(
             f"  {Fore.YELLOW}{i:<6}{Style.RESET_ALL}"
             f"{Fore.CYAN}{name:<20}{Style.RESET_ALL} "
-            f"{sev_color}{probe.severity:<8}{Style.RESET_ALL} "
             f"{prompt_count:<10} "
             f"{probe.description}"
         )
@@ -118,12 +114,8 @@ def select_probes_menu() -> list:
     for i, name in enumerate(probe_names, 1):
         probe = PROBE_REGISTRY[name]()
         prompt_count = len(probe.get_prompts())
-        sev_color = {
-            "HIGH": Fore.RED, "MEDIUM": Fore.YELLOW, "LOW": Fore.GREEN,
-        }.get(probe.severity, "")
         print(
             f"  {Fore.YELLOW}[{i}]{Style.RESET_ALL} "
-            f"{sev_color}{probe.severity:<8}{Style.RESET_ALL} "
             f"{Fore.CYAN}{name:<20}{Style.RESET_ALL} "
             f"({prompt_count}개)  {probe.description}"
         )

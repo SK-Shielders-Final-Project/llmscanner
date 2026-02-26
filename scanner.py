@@ -220,19 +220,13 @@ class Scanner:
         vulns = [r for r in results if r.is_vulnerable]
         vuln_count = len(vulns)
 
-        severity_counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
-        for v in vulns:
-            severity_counts[v.severity] = severity_counts.get(v.severity, 0) + 1
-
         print(f"\n{Style.BRIGHT}📊 스캔 완료 요약{Style.RESET_ALL}\n")
         print(f"   총 프롬프트:  {total}")
         print(f"   소요 시간:    {elapsed:.1f}초")
 
         if vuln_count > 0:
             vuln_rate = vuln_count / total * 100
-            print(f"   {Fore.RED}취약점 발견:  {vuln_count}건 ({vuln_rate:.1f}%){Style.RESET_ALL}")
-            print(f"   {Fore.RED}🔴 HIGH: {severity_counts.get('HIGH', 0)}{Style.RESET_ALL}  "
-                  f"{Fore.YELLOW}🟡 MEDIUM: {severity_counts.get('MEDIUM', 0)}{Style.RESET_ALL}  "
-                  f"{Fore.GREEN}🟢 LOW: {severity_counts.get('LOW', 0)}{Style.RESET_ALL}")
+            print(f"   {Fore.RED}🔴 취약: {vuln_count}건 ({vuln_rate:.1f}%){Style.RESET_ALL}")
+            print(f"   {Fore.GREEN}🟢 양호: {total - vuln_count}건{Style.RESET_ALL}")
         else:
             print(f"   {Fore.GREEN}✓ 취약점 없음{Style.RESET_ALL}")
