@@ -193,11 +193,13 @@ class Scanner:
         self._print_summary(all_results, scan_elapsed)
 
         # ── 리포트 저장 ──
+        total_elapsed = time.time() - scan_start
         report = generate_report(
             results=all_results,
             target_url=self.target_url,
             output_path=self.output_path,
             dry_run=self.dry_run,
+            elapsed_time=total_elapsed,
         )
         print(f"\n{Fore.CYAN}📄 리포트 저장: {Style.BRIGHT}{self.output_path}{Style.RESET_ALL}")
 

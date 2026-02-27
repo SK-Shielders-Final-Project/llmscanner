@@ -16,6 +16,7 @@ def generate_report(
     target_url: str,
     output_path: str = None,
     dry_run: bool = False,
+    elapsed_time: float = 0.0,
 ) -> str:
     """
     스캔 결과를 마크다운 리포트로 생성.
@@ -33,17 +34,26 @@ def generate_report(
 
     # ── 통계 집계 ──
     total = len(results)
-    vulns = [r for r in results if r.is_vulnerable]
-    safe = total - len(vulns)
+    vulns = [r for r in results if r.is_vulnerable and not (r.gemini_detail and "최종: 보류" in r.gemini_detail)]
+    pending = [r for r in results if r.gemini_detail and "최종: 보류" in r.gemini_detail]
+    safe = total - len(vulns) - len(pending)
 
     # 카테고리별 집계
     categories: Dict[str, Dict] = {}
     for r in results:
         if r.category not in categories:
-            categories[r.category] = {"total": 0, "vulnerable": 0, "results": []}
+            categories[r.category] = {"total": 0, "vulnerable": 0, "pending": 0, "safe": 0, "results": []}
         categories[r.category]["total"] += 1
-        if r.is_vulnerable:
+        
+        is_pending = bool(r.gemini_detail and "최종: 보류" in r.gemini_detail)
+        
+        if is_pending:
+            categories[r.category]["pending"] += 1
+        elif r.is_vulnerable:
             categories[r.category]["vulnerable"] += 1
+        else:
+            categories[r.category]["safe"] += 1
+            
         categories[r.category]["results"].append(r)
 
     # ── 리포트 생성 ──
@@ -53,6 +63,8 @@ def generate_report(
     lines.append(f"> **대상 URL**: `{target_url}`  ")
     if dry_run:
         lines.append("> **모드**: 🧪 DRY-RUN (실제 API 호출 없음)  ")
+    if elapsed_time > 0:
+        lines.append(f"> **총 소요 시간**: {elapsed_time:.1f}초  ")
     lines.append("")
 
     lines.append("---\n")
@@ -63,9 +75,13 @@ def generate_report(
     lines.append(f"|------|-----|")
     lines.append(f"| 총 프롬프트 수 | {total} |")
     lines.append(f"| 🔴 취약점 발견 | **{len(vulns)}** |")
+    lines.append(f"| 🟡 판정 보류 | {len(pending)} |")
     lines.append(f"| 🟢 안전 | {safe} |")
-    vuln_rate = (len(vulns) / total * 100) if total > 0 else 0
-    lines.append(f"| 취약점 비율 | **{vuln_rate:.1f}%** |")
+    
+    # 보류를 제외하고 확정된 건수 기준으로 취약 비율 산출
+    determined_total = total - len(pending)
+    vuln_rate = (len(vulns) / determined_total * 100) if determined_total > 0 else 0
+    lines.append(f"| 확정 취약률 | **{vuln_rate:.1f}%** |")
     lines.append("")
 
     lines.append("---\n")
@@ -87,19 +103,24 @@ def generate_report(
     for cat_key, cat_data in categories.items():
         cat_name = CATEGORY_NAMES.get(cat_key, cat_key)
         cat_vuln = cat_data["vulnerable"]
+        cat_pending = cat_data["pending"]
+        cat_safe = cat_data["safe"]
         cat_total = cat_data["total"]
-        cat_safe = cat_total - cat_vuln
-        cat_rate = (cat_vuln / cat_total * 100) if cat_total > 0 else 0
+        
+        cat_determined = cat_total - cat_pending
+        cat_rate = (cat_vuln / cat_determined * 100) if cat_determined > 0 else 0
 
         if cat_vuln > 0:
             status_badge = f"🔴 **취약 ({cat_vuln}건 발견)**"
+        elif cat_pending > 0:
+            status_badge = f"🟡 **보류 ({cat_pending}건)**"
         else:
             status_badge = "🟢 **안전**"
 
         lines.append(f"### {cat_name}\n")
-        lines.append(f"| 결과 | 전체 | 취약 | 안전 | 취약률 |")
-        lines.append(f"|------|------|------|------|--------|")
-        lines.append(f"| {status_badge} | {cat_total} | {cat_vuln} | {cat_safe} | {cat_rate:.0f}% |")
+        lines.append(f"| 결과 | 전체 | 취약 | 보류 | 안전 | 확정 취약률 |")
+        lines.append(f"|------|------|------|------|------|-------------|")
+        lines.append(f"| {status_badge} | {cat_total} | {cat_vuln} | {cat_pending} | {cat_safe} | {cat_rate:.0f}% |")
         lines.append("")
 
         # ── 모든 프롬프트-응답 테이블 ──
