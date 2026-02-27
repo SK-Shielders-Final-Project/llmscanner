@@ -23,7 +23,7 @@ from probes.hallucination import HallucinationProbe
 from probes.code_generation import CodeGenerationProbe
 from probes.special_tokens import SpecialTokensProbe
 from report import generate_report
-from gemini_verifier import verify_results
+from cross_verifier import verify_results
 
 colorama_init(autoreset=True)
 
@@ -221,10 +221,11 @@ class Scanner:
     def _print_summary(self, results: List[ProbeResult], elapsed: float):
         """최종 요약 출력"""
         total = len(results)
-        vulns = [r for r in results if r.is_vulnerable]
-        vuln_count = len(vulns)
         pending_count = sum(1 for r in results if r.gemini_detail and "최종: 보류" in r.gemini_detail)
-        safe_count = total - vuln_count - pending_count
+        # 보류 항목은 취약/양호에서 제외
+        non_pending = [r for r in results if not (r.gemini_detail and "최종: 보류" in r.gemini_detail)]
+        vuln_count = sum(1 for r in non_pending if r.is_vulnerable)
+        safe_count = len(non_pending) - vuln_count
 
         print(f"\n{Style.BRIGHT}📊 스캔 완료 요약{Style.RESET_ALL}\n")
         print(f"   총 프롬프트:  {total}")

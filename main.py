@@ -56,7 +56,7 @@ _settings = {
     "username": "",
     "password": "",
     "delay": 1.0,
-    "timeout": 30,
+    "timeout": 120,
     "verify_ssl": True,
     "output": None,
 }
@@ -355,7 +355,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--delay", type=float, default=1.0)
-    parser.add_argument("--timeout", type=int, default=30)
+    parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument("--no-ssl-verify", action="store_true")
     parser.add_argument("--list", action="store_true", dest="list_probes")
     parser.add_argument("--jwt-token", type=str, default=None)
