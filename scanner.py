@@ -180,9 +180,9 @@ class Scanner:
 
         scan_elapsed = time.time() - scan_start
 
-        # ── Gemini 2차 검증 (취약 판정 건만) ──
+        # ── LLM 교차 검증 (OpenRouter) ──
         if not self.dry_run:
-            all_results = verify_results(all_results, delay=4.0)
+            all_results = verify_results(all_results)
 
         # ── 최종 요약 ──
         print(f"\n{'═' * 70}")
