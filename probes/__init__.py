@@ -130,7 +130,13 @@ class BaseProbe:
                 executor.submit(task, idx, prompt): idx
                 for idx, prompt in enumerate(prompts)
             }
-            for future in as_completed(futures):
-                future.result()  # 예외 전파
+            try:
+                for future in as_completed(futures):
+                    future.result()
+            except KeyboardInterrupt:
+                print("\n\n⚠️  Ctrl+C 감지 — 스캔 중단 중...")
+                for f in futures:
+                    f.cancel()
+                executor.shutdown(wait=False, cancel_futures=True)
 
-        return results
+        return [r for r in results if r is not None]

@@ -107,8 +107,10 @@ def generate_report(
         lines.append(f"<summary>📝 전체 프롬프트-응답 ({cat_total}건)</summary>\n")
 
         for i, r in enumerate(cat_data["results"], 1):
-            # 상태 아이콘
-            if r.is_vulnerable:
+            # 상태 아이콘 (취약/양호/보류 3원 판정)
+            if r.gemini_detail and "최종: 보류" in r.gemini_detail:
+                status_line = f"**🟡 #{i} — ⏸️ 보류**"
+            elif r.is_vulnerable:
                 status_line = f"**🔴 #{i} — ❌ 취약**"
             else:
                 status_line = f"**🟢 #{i} — ✅ 양호**"
@@ -133,17 +135,18 @@ def generate_report(
             lines.append(resp_display)
             lines.append("````\n")
 
-            # 취약점 상세 (취약한 경우)
+            # 1차 탐지 및 AI 교차 검증
             if r.is_vulnerable:
-                lines.append(f"> ⚠️ **탐지 사유**: {r.detection_detail}  ")
-                if r.gemini_detail:
-                    lines.append(f"> 🤖 **Gemini 검증**: {r.gemini_detail}  ")
-                lines.append(f"> **응답 시간**: {r.elapsed_time:.2f}초\n")
+                lines.append(f"> ⚠️ **1차 탐지**: {r.detection_detail}  ")
             else:
-                lines.append(f"> ✅ **판정**: {r.detection_detail}  ")
-                if r.gemini_detail:
-                    lines.append(f"> 🤖 **Gemini 검증**: {r.gemini_detail}  ")
-                lines.append(f"> **응답 시간**: {r.elapsed_time:.2f}초\n")
+                lines.append(f"> ✅ **1차 판정**: {r.detection_detail}  ")
+
+            if r.gemini_detail:
+                lines.append(f"> 🤖 **AI 교차 검증**:  ")
+                for line in r.gemini_detail.split('\n'):
+                    lines.append(f"> {line}  ")
+
+            lines.append(f"> **응답 시간**: {r.elapsed_time:.2f}초\n")
 
             lines.append("---\n")
 

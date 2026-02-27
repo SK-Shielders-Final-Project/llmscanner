@@ -23,7 +23,7 @@ from probes.hallucination import HallucinationProbe
 from probes.code_generation import CodeGenerationProbe
 from probes.special_tokens import SpecialTokensProbe
 from report import generate_report
-from gemini_verifier import verify_results
+from cross_verifier import verify_results
 
 colorama_init(autoreset=True)
 
@@ -152,7 +152,11 @@ class Scanner:
                     end="", flush=True
                 )
 
-            results = probe.run(self.client, self.detector, progress_callback=progress_callback, max_workers=1)
+            try:
+                results = probe.run(self.client, self.detector, progress_callback=progress_callback, max_workers=5)
+            except KeyboardInterrupt:
+                print(f"\n\n{Fore.YELLOW}⚠️  Ctrl+C 감지 — 스캔 중단{Style.RESET_ALL}")
+                break
             all_results.extend(results)
             print()  # 프로그레스 바 줄바꿈
 
@@ -180,9 +184,9 @@ class Scanner:
 
         scan_elapsed = time.time() - scan_start
 
-        # ── Gemini 2차 검증 (취약 판정 건만) ──
+        # ── LLM 교차 검증 (OpenRouter) ──
         if not self.dry_run:
-            all_results = verify_results(all_results, delay=4.0)
+            all_results = verify_results(all_results)
 
         # ── 최종 요약 ──
         print(f"\n{'═' * 70}")
@@ -217,16 +221,22 @@ class Scanner:
     def _print_summary(self, results: List[ProbeResult], elapsed: float):
         """최종 요약 출력"""
         total = len(results)
-        vulns = [r for r in results if r.is_vulnerable]
-        vuln_count = len(vulns)
+        pending_count = sum(1 for r in results if r.gemini_detail and "최종: 보류" in r.gemini_detail)
+        # 보류 항목은 취약/양호에서 제외
+        non_pending = [r for r in results if not (r.gemini_detail and "최종: 보류" in r.gemini_detail)]
+        vuln_count = sum(1 for r in non_pending if r.is_vulnerable)
+        safe_count = len(non_pending) - vuln_count
 
         print(f"\n{Style.BRIGHT}📊 스캔 완료 요약{Style.RESET_ALL}\n")
         print(f"   총 프롬프트:  {total}")
         print(f"   소요 시간:    {elapsed:.1f}초")
 
-        if vuln_count > 0:
-            vuln_rate = vuln_count / total * 100
-            print(f"   {Fore.RED}🔴 취약: {vuln_count}건 ({vuln_rate:.1f}%){Style.RESET_ALL}")
-            print(f"   {Fore.GREEN}🟢 양호: {total - vuln_count}건{Style.RESET_ALL}")
+        if vuln_count > 0 or pending_count > 0:
+            if vuln_count > 0:
+                vuln_rate = vuln_count / total * 100
+                print(f"   {Fore.RED}🔴 취약: {vuln_count}건 ({vuln_rate:.1f}%){Style.RESET_ALL}")
+            if pending_count > 0:
+                print(f"   {Fore.YELLOW}🟡 보류: {pending_count}건{Style.RESET_ALL}")
+            print(f"   {Fore.GREEN}🟢 양호: {safe_count}건{Style.RESET_ALL}")
         else:
             print(f"   {Fore.GREEN}✓ 취약점 없음{Style.RESET_ALL}")
