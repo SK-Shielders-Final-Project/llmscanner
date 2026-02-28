@@ -159,7 +159,7 @@ class APIClient:
                 )
                 self._last_request_time = time.time()
 
-                # 인증 실패 — 토큰 만료 가능성
+                # 인증 실패 — 토큰 만료 가능성 또는 가드레일 차단
                 if resp.status_code == 401 or resp.status_code == 403:
                     # 자동 재로그인 시도
                     if self.username and self.password:
@@ -180,6 +180,15 @@ class APIClient:
                     wait = min(2 ** attempt, 30)
                     time.sleep(wait)
                     continue
+
+                # 4xx 클라이언트 오류 발생 시 가드레일 메시지 검사
+                if 400 <= resp.status_code < 500:
+                    try:
+                        error_body = resp.text
+                        if "안전 정책에 따라" in error_body:
+                            return "안전 정책에 따라 요청을 처리할 수 없습니다. 다른 방식으로 질문해 주세요."
+                    except Exception:
+                        pass
 
                 resp.raise_for_status()
 

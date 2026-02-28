@@ -12,9 +12,14 @@ from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 import time
+from dotenv import load_dotenv
 
-# data.json 경로
-_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data.json")
+# .env 로드
+load_dotenv(override=True)
+
+# dataset 경로
+_DATASET_FILENAME = os.environ.get("DATASET_FILE", "flatfrom_data.json")
+_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), _DATASET_FILENAME)
 
 def _load_data():
     """data.json 전체 로딩"""
