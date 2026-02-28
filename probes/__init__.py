@@ -18,8 +18,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # dataset 경로
-_DATASET_FILENAME = os.environ.get("DATASET_FILE", "flatfrom_data.json")
-_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), _DATASET_FILENAME)
+_DATASET_FILENAME = os.environ.get("DATASET_FILE", "flatform_data.json")
+_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", _DATASET_FILENAME)
 
 def _load_data():
     """data.json 전체 로딩"""
