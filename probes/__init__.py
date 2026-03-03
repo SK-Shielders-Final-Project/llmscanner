@@ -144,7 +144,7 @@ class BaseProbe:
             elapsed_time=elapsed,
         )
 
-    def run(self, api_client, detector, progress_callback=None, max_workers=10) -> List[ProbeResult]:
+    def run(self, api_client, detector, progress_callback=None, max_workers=None) -> List[ProbeResult]:
         """
         프로브 실행: 멀티스레드로 프롬프트를 API에 전송 후 탐지 결과 반환
 
@@ -152,11 +152,13 @@ class BaseProbe:
             api_client: API 호출 클라이언트
             detector: 응답 분석 디텍터
             progress_callback: 진행도 콜백 함수(current, total, result)
-            max_workers: 동시 실행 스레드 수 (기본 10)
+            max_workers: 동시 실행 스레드 수 (None이면 MAX_WORKERS 환경변수 사용, 기본 10)
 
         Returns:
             ProbeResult 리스트
         """
+        if max_workers is None:
+            max_workers = int(os.environ.get("MAX_WORKERS", "10"))
         prompts = self.get_prompts()
         total = len(prompts)
 

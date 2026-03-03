@@ -96,6 +96,18 @@ def generate_report(
     lines.append(f"| 확정 취약률 | **{vuln_rate:.1f}%** |")
     lines.append("")
 
+    CATEGORY_NAMES = {
+        "jailbreak": "🔓 탈옥 (Jailbreak)",
+        "unethical": "⚠️ 비윤리적 발언",
+        "prompt_injection": "💉 프롬프트 인젝션",
+        "data_leakage": "📤 데이터 유출",
+        "encoding": "🔢 인코딩 우회",
+        "hallucination": "👻 환각/허위정보",
+        "code_generation": "💻 악성 코드 생성",
+        "special_tokens": "🔤 특수 토큰 공격",
+        "web_vulnerability": "🌐 웹 취약점",
+    }
+
     # ── 그래프 생성 ──
     if output_path and total > 0:
         chart_dir = os.path.dirname(output_path)
@@ -116,16 +128,6 @@ def generate_report(
     # ── 카테고리별 전체 결과 (프롬프트 + 응답 포함) ──
     lines.append("## 📋 카테고리별 상세 결과\n")
 
-    CATEGORY_NAMES = {
-        "jailbreak": "🔓 탈옥 (Jailbreak)",
-        "unethical": "⚠️ 비윤리적 발언",
-        "prompt_injection": "💉 프롬프트 인젝션",
-        "data_leakage": "📤 데이터 유출",
-        "encoding": "🔢 인코딩 우회",
-        "hallucination": "👻 환각/허위정보",
-        "code_generation": "💻 악성 코드 생성",
-        "special_tokens": "🔤 특수 토큰 공격",
-    }
 
     for cat_key, cat_data in categories.items():
         cat_name = CATEGORY_NAMES.get(cat_key, cat_key)
