@@ -13,6 +13,7 @@ probes/encoding.py
 probes/hallucination.py
 probes/jailbreak.py
 probes/prompt_injection.py
+probes/special_tokens.py
 probes/unethical.py
 vrompt.egg-info/PKG-INFO
 vrompt.egg-info/SOURCES.txt

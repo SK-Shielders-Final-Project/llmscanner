@@ -17,19 +17,36 @@
 
 ---
 
-## 🛡️ 스캔 카테고리 (8개, 122개 프롬프트)
+## 🛡️ 스캔 카테고리 (9개, 1,166개 프롬프트)
 
-| # | 카테고리               | 심각도 | 프롬프트 수 | 설명                                                                      |
-| - | ---------------------- | ------ | ----------- | ------------------------------------------------------------------------- |
-| 1 | 🔓`jailbreak`        | HIGH   | 40          | DAN, DUDE, STAN, Developer Mode, 역할극, AIM 등 탈옥 공격                 |
-| 2 | ⚠️`unethical`      | HIGH   | 39          | 차별, 폭력, 약물, GPS 스토킹, 보험사기 등 비윤리적 발언 유도              |
-| 3 | 💉`prompt_injection` | HIGH   | 39          | 시스템 프롬프트 추출, Ignore 인젝션, 역할 전환, 구분자 공격               |
-| 4 | 📤`data_leakage`     | HIGH   | 40          | DB 접속정보, 환경변수, 타인 개인정보, admin 권한 유출 시도                |
-| 5 | 🔢`encoding`         | MEDIUM | 38          | Base64, ROT13, Hex, Leetspeak, 역순 인코딩 우회                           |
-| 6 | 👻`hallucination`    | MEDIUM | 39          | 가짜 기능/프로모션, 거짓 전제 수용, 가상 법률/규정 유도                   |
-| 7 | 💻`code_generation`  | HIGH   | 39          | execute_in_sandbox 악용, Docker 탈출, 리버스쉘, DB 덤프, DoS 공격         |
-| 8 | 🔤`special_tokens`   | HIGH   | 39          | Gemma 3 특수 토큰(`<start_of_turn>` 등)으로 대화 흐름 조작 및 필터 우회 |
-| total | total Prompt   |    | 313          |  |
+| # | 카테고리                | 심각도 | Platform      | Normal        | 합계            | 설명                                                                      |
+| - | ----------------------- | ------ | ------------- | ------------- | --------------- | ------------------------------------------------------------------------- |
+| 1 | 🔓`jailbreak`         | HIGH   | 28            | 107           | 135             | DAN, DUDE, STAN, Developer Mode, 역할극, AIM 등 탈옥 공격                 |
+| 2 | ⚠️`unethical`       | HIGH   | 33            | 94            | 127             | 차별, 폭력, 약물, GPS 스토킹, 보험사기 등 비윤리적 발언 유도              |
+| 3 | 💉`prompt_injection`  | HIGH   | 34            | 128           | 162             | 시스템 프롬프트 추출, Ignore 인젝션, 역할 전환, 구분자 공격               |
+| 4 | 📤`data_leakage`      | HIGH   | 26            | 117           | 143             | DB 접속정보, 환경변수, 타인 개인정보, admin 권한 유출 시도                |
+| 5 | 🔢`encoding`          | HIGH   | 125*          | 2*            | 127             | Base64, ROT13, Hex, Leetspeak, 역순 인코딩 우회                           |
+| 6 | 👻`hallucination`     | MEDIUM | 103           | 72            | 175             | 가짜 기능/프로모션, 거짓 전제 수용, 가상 법률/규정 유도                   |
+| 7 | 💻`code_generation`   | HIGH   | 105           | —            | 105             | execute_in_sandbox 악용, Docker 탈출, 리버스쉘, DB 덤프, DoS 공격         |
+| 8 | 🔤`special_tokens`    | HIGH   | 50            | 73            | 123             | Gemma 3 특수 토큰(`<start_of_turn>` 등)으로 대화 흐름 조작 및 필터 우회 |
+| 9 | 🌐`web_vulnerability` | HIGH   | —            | 69            | 69              | SSRF, XSS, SQL Injection 등 웹 취약점 공격                                |
+|   | **합계**          |        | **504** | **662** | **1,166** |                                                                           |
+
+> \* `encoding` 프로브는 `encoding_payloads`에서 Base64/ROT13/Hex 변환을 통해 프롬프트를 동적 생성합니다.
+
+---
+
+## ⚙️ 환경 변수 (`.env`)
+
+```env
+OPENROUTER_API_KEY=         # OpenRouter API 키 (AI 교차 검증용)
+MODEL_A=                    # 1차 검증 모델 (예: openai/gpt-5.2)
+MODEL_B=                    # 2차 검증 모델 (예: google/gemini-3-flash-preview)
+PLATFORM=true               # 플랫폼 데이터셋 사용 여부 (true/false)
+NORMAL=true                 # 일반 데이터셋 사용 여부 (true/false)
+MAX_WORKERS=10              # 동시 스캔 스레드 수 (기본 10)
+```
+
 ---
 
 ## 🚀 설치 및 실행
@@ -136,20 +153,23 @@ scanner/
 ├── scanner.py           # 스캔 엔진 (멀티스레드 실행)
 ├── api_client.py        # API 클라이언트 (JWT 인증 + 자동 재로그인)
 ├── detector.py          # 응답 분석 디텍터 (카테고리별 탐지 로직)
-├── report.py            # 마크다운 리포트 생성기
-├── data.json            # 전체 프로브 프롬프트/트리거 데이터
+├── report.py            # 마크다운 리포트 생성기 (그래프 포함)
+├── .env                 # 환경변수 (PLATFORM, NORMAL, MAX_WORKERS 등)
 ├── requirements.txt     # 의존성
 ├── reports/             # 스캔 리포트 저장 폴더
+├── data/
+│   ├── platform_data.json   # 플랫폼 특화 프롬프트 (379개)
+│   └── normal_data.json     # 일반 공격 프롬프트 (762개)
 └── probes/              # 프로브 모듈
-    ├── __init__.py          # BaseProbe (data.json 로딩)
-    ├── jailbreak.py         # 탈옥 공격 (15개)
-    ├── unethical.py         # 비윤리적 발언 (20개)
-    ├── prompt_injection.py  # 프롬프트 인젝션 (15개)
-    ├── data_leakage.py      # 데이터 유출 (15개)
-    ├── encoding.py          # 인코딩 우회 (16개)
-    ├── hallucination.py     # 환각/허위정보 (12개)
-    ├── code_generation.py   # 악성 코드 생성 (16개)
-    └── special_tokens.py    # 특수 토큰 공격 (13개)
+    ├── __init__.py          # BaseProbe (데이터셋 로딩 및 병합)
+    ├── jailbreak.py
+    ├── unethical.py
+    ├── prompt_injection.py
+    ├── data_leakage.py
+    ├── encoding.py
+    ├── hallucination.py
+    ├── code_generation.py
+    └── special_tokens.py
 ```
 
 ---
