@@ -8,7 +8,19 @@ Vrompt — 리포트 생성기
 import os
 from datetime import datetime
 from typing import List, Dict
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 from probes import ProbeResult
+
+# ── 한글 폰트 설정 ──
+_FONT_CANDIDATES = ['Malgun Gothic', 'NanumGothic', 'AppleGothic', 'DejaVu Sans']
+for _fname in _FONT_CANDIDATES:
+    if any(_fname.lower() in f.name.lower() for f in fm.fontManager.ttflist):
+        plt.rcParams['font.family'] = _fname
+        break
+plt.rcParams['axes.unicode_minus'] = False
 
 
 def generate_report(
@@ -83,6 +95,21 @@ def generate_report(
     vuln_rate = (len(vulns) / determined_total * 100) if determined_total > 0 else 0
     lines.append(f"| 확정 취약률 | **{vuln_rate:.1f}%** |")
     lines.append("")
+
+    # ── 그래프 생성 ──
+    if output_path and total > 0:
+        chart_dir = os.path.dirname(output_path)
+        base_name = os.path.splitext(os.path.basename(output_path))[0]
+
+        # 1) 전체 판정 분포 파이 차트
+        pie_path = os.path.join(chart_dir, f"{base_name}_pie.png")
+        _generate_pie_chart(len(vulns), len(pending), safe, pie_path)
+        lines.append(f"![전체 판정 분포]({base_name}_pie.png)\n")
+
+        # 2) 카테고리별 스택 바 차트
+        bar_path = os.path.join(chart_dir, f"{base_name}_bar.png")
+        _generate_bar_chart(categories, CATEGORY_NAMES, bar_path)
+        lines.append(f"![카테고리별 판정 분포]({base_name}_bar.png)\n")
 
     lines.append("---\n")
 
@@ -215,3 +242,70 @@ def generate_report(
             f.write(report)
 
     return report
+
+
+def _generate_pie_chart(vuln_count: int, pending_count: int, safe_count: int, save_path: str):
+    """전체 판정 분포 파이 차트 생성"""
+    labels, sizes, colors = [], [], []
+    if vuln_count > 0:
+        labels.append(f'취약 ({vuln_count})')
+        sizes.append(vuln_count)
+        colors.append('#e74c3c')
+    if pending_count > 0:
+        labels.append(f'보류 ({pending_count})')
+        sizes.append(pending_count)
+        colors.append('#f39c12')
+    if safe_count > 0:
+        labels.append(f'양호 ({safe_count})')
+        sizes.append(safe_count)
+        colors.append('#2ecc71')
+
+    if not sizes:
+        return
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    wedges, texts, autotexts = ax.pie(
+        sizes, labels=labels, colors=colors, autopct='%1.1f%%',
+        startangle=90, textprops={'fontsize': 11}
+    )
+    for at in autotexts:
+        at.set_fontsize(12)
+        at.set_fontweight('bold')
+    ax.set_title('전체 판정 분포', fontsize=14, fontweight='bold', pad=15)
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+
+
+def _generate_bar_chart(categories: dict, category_names: dict, save_path: str):
+    """카테고리별 취약/보류/양호 수평 스택 바 차트 생성"""
+    cat_labels = []
+    vuln_vals, pending_vals, safe_vals = [], [], []
+
+    for cat_key, cat_data in categories.items():
+        short_name = category_names.get(cat_key, cat_key)
+        # 이모지 제거 (차트 깨짐 방지)
+        short_name = short_name.lstrip('🔓⚠️💉📤🔢👻💻🔤🌐 ')
+        cat_labels.append(short_name)
+        vuln_vals.append(cat_data['vulnerable'])
+        pending_vals.append(cat_data['pending'])
+        safe_vals.append(cat_data['safe'])
+
+    fig, ax = plt.subplots(figsize=(10, max(3, len(cat_labels) * 0.6)))
+
+    y_pos = range(len(cat_labels))
+    bars_safe = ax.barh(y_pos, safe_vals, color='#2ecc71', label='양호', height=0.6)
+    bars_pending = ax.barh(y_pos, pending_vals, left=safe_vals, color='#f39c12', label='보류', height=0.6)
+    left_vuln = [s + p for s, p in zip(safe_vals, pending_vals)]
+    bars_vuln = ax.barh(y_pos, vuln_vals, left=left_vuln, color='#e74c3c', label='취약', height=0.6)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(cat_labels, fontsize=10)
+    ax.set_xlabel('프롬프트 수', fontsize=11)
+    ax.set_title('카테고리별 판정 분포', fontsize=14, fontweight='bold', pad=15)
+    ax.legend(loc='lower right', fontsize=10)
+    ax.invert_yaxis()
+
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
