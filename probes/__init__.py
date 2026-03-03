@@ -18,13 +18,57 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # dataset 경로
-_DATASET_FILENAME = os.environ.get("DATASET_FILE", "flatform_data.json")
-_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", _DATASET_FILENAME)
+_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+
+# 리스트 타입 필드: 병합 시 concatenate
+_LIST_FIELDS = {"prompts", "triggers", "encoding_payloads", "extra_prompts"}
+
+
+def _load_json(filename):
+    """단일 JSON 파일 로딩"""
+    path = os.path.join(_DATA_DIR, filename)
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _merge_data(base, other):
+    """두 데이터셋을 병합 — 동일 카테고리의 리스트 필드는 concatenate"""
+    merged = {}
+    all_keys = set(base.keys()) | set(other.keys())
+    for key in all_keys:
+        if key in base and key in other:
+            merged_cat = dict(base[key])
+            for field in _LIST_FIELDS:
+                if field in other[key]:
+                    merged_cat[field] = merged_cat.get(field, []) + other[key][field]
+            merged[key] = merged_cat
+        elif key in base:
+            merged[key] = base[key]
+        else:
+            merged[key] = other[key]
+    return merged
+
 
 def _load_data():
-    """data.json 전체 로딩"""
-    with open(_DATA_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
+    """PLATFORM / NORMAL 환경변수에 따라 데이터셋 로딩 및 병합"""
+    use_platform = os.environ.get("PLATFORM", "true").strip().lower() == "true"
+    use_normal = os.environ.get("NORMAL", "true").strip().lower() == "true"
+
+    datasets = []
+    if use_platform:
+        datasets.append(_load_json("platform_data.json"))
+    if use_normal:
+        datasets.append(_load_json("normal_data.json"))
+
+    if not datasets:
+        print("[WARNING] PLATFORM과 NORMAL이 모두 false — 데이터셋이 없습니다.")
+        return {}
+
+    result = datasets[0]
+    for ds in datasets[1:]:
+        result = _merge_data(result, ds)
+    return result
+
 
 # 모듈 로딩 시 한 번만 읽기
 PROBE_DATA = _load_data()
