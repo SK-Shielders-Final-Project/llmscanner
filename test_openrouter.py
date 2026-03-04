@@ -7,11 +7,8 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# 테스트할 두 모델
-MODELS = [
-    "openai/gpt-oss-safeguard-20b",
-    "google/gemini-3-flash-preview"
-]
+# .env에서 테스트할 모델 가져오기
+MODELS = [m for m in [os.getenv("MODEL_A", ""), os.getenv("MODEL_B", "")] if m]
 
 def test_model(model_name: str):
     print(f"\n🚀 모델 테스트 중: {model_name}")
