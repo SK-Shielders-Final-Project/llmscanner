@@ -201,7 +201,22 @@ class Scanner:
             dry_run=self.dry_run,
             elapsed_time=total_elapsed,
         )
-        print(f"\n{Fore.CYAN}📄 리포트 저장: {Style.BRIGHT}{self.output_path}{Style.RESET_ALL}")
+
+        # 분할 저장 여부 확인 및 출력
+        from report import CHUNK_SIZE
+        total_prompts_final = len(all_results)
+        total_chunks = max(1, (total_prompts_final + CHUNK_SIZE - 1) // CHUNK_SIZE)
+
+        if total_chunks > 1:
+            base_dir = os.path.dirname(self.output_path)
+            base_name = os.path.splitext(os.path.basename(self.output_path))[0]
+            ext = os.path.splitext(self.output_path)[1]
+            print(f"\n{Fore.CYAN}📄 리포트 저장 ({total_chunks}개 파일로 분할):{Style.RESET_ALL}")
+            for ci in range(1, total_chunks + 1):
+                chunk_file = os.path.join(base_dir, f"{base_name}-{ci}{ext}")
+                print(f"   {Fore.WHITE}{ci}/{total_chunks}: {Style.BRIGHT}{chunk_file}{Style.RESET_ALL}")
+        else:
+            print(f"\n{Fore.CYAN}📄 리포트 저장: {Style.BRIGHT}{self.output_path}{Style.RESET_ALL}")
 
         return all_results
 
