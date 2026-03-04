@@ -218,6 +218,30 @@ class Scanner:
         else:
             print(f"\n{Fore.CYAN}📄 리포트 저장: {Style.BRIGHT}{self.output_path}{Style.RESET_ALL}")
 
+        # ── PDF 리포트 저장 ──
+        try:
+            from pdf_report import generate_pdf_report
+
+            pdf_dir = os.path.dirname(self.output_path)
+            md_base = os.path.splitext(os.path.basename(self.output_path))[0]
+            pdf_path = os.path.join(pdf_dir, f"{md_base}.pdf")
+
+            # 차트 이미지 경로 (generate_report에서 생성됨)
+            chart_base = md_base.replace("-1", "") if total_chunks > 1 else md_base
+
+            generate_pdf_report(
+                results=all_results,
+                target_url=self.target_url,
+                output_path=pdf_path,
+                dry_run=self.dry_run,
+                elapsed_time=total_elapsed,
+                chart_dir=pdf_dir,
+                chart_base_name=chart_base,
+            )
+            print(f"{Fore.CYAN}📑 PDF 리포트 저장: {Style.BRIGHT}{pdf_path}{Style.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.YELLOW}⚠ PDF 생성 실패: {e}{Style.RESET_ALL}")
+
         return all_results
 
 
