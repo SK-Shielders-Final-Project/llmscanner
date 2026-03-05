@@ -6,11 +6,19 @@ Vrompt — PDF 리포트 생성기
 """
 
 import os
+import warnings
 from datetime import datetime
 from typing import List, Dict
 from fpdf import FPDF
 
 from probes import ProbeResult
+
+# ── FontTools 폰트 경고 숨기기 ──
+warnings.filterwarnings(
+    "ignore",
+    message="MERG NOT subset; don't know how to subset; dropped",
+    category=UserWarning
+)
 
 # ── 카테고리 이름 (이모지 제거 — PDF에서 깨짐 방지) ──
 CATEGORY_NAMES_PDF = {
@@ -82,6 +90,26 @@ def _safe_text(text: str) -> str:
     """PDF에서 표시 불가능한 문자 제거/치환"""
     if not text:
         return "(없음)"
+
+    replacements = {
+        '\U0001f170\ufe0f': '[A]', '\U0001f171\ufe0f': '[B]',
+        '\U0001f170': '[A]', '\U0001f171': '[B]',
+        '\u2705': '[OK]', '\u274c': '[X]',
+        '\u26a0\ufe0f': '[!]', '\u26a0': '[!]',
+        '\U0001f916': '[AI]', '\U0001f4e8': '[P]',
+        '\U0001f4ac': '[R]', '\U0001f4dd': '[M]',
+        '\U0001f534': '[!]', '\U0001f7e1': '[?]',
+        '\U0001f7e2': '[O]', '\U0001f513': '',
+        '\U0001f489': '', '\U0001f511': '',
+        '\U0001f4ca': '', '\U0001f9ec': '',
+        '\u26a1': '', '\U0001f4bb': '',
+        '\U0001f524': '', '\U0001f310': '',
+        '\u23f8\ufe0f': '[?]', '\u23f8': '[?]',
+        '\U0001f1e6': '[A]', '\U0001f1e7': '[B]',
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
     # 일반적인 이모지/특수 유니코드 제거 (BMP 외 문자)
     cleaned = []
     for ch in text:
@@ -354,8 +382,20 @@ def generate_pdf_report(
 
             # AI 교차 검증
             if r.gemini_detail:
-                gemini_short = r.gemini_detail[:200] + ("..." if len(r.gemini_detail) > 200 else "")
-                pdf.cell(0, 4, _safe_text(f"  AI Verify: {gemini_short}"), new_x="LMARGIN", new_y="NEXT")
+                ai_text = r.gemini_detail
+                # 기호 변경 및 들여쓰기 추가
+                for emoji in ['\U0001f170\ufe0f', '\U0001f170', '\U0001f1e6']:
+                    ai_text = ai_text.replace(f'> {emoji}', f'\n|>[A]')
+                for emoji in ['\U0001f171\ufe0f', '\U0001f171', '\U0001f1e7']:
+                    ai_text = ai_text.replace(f'> {emoji}', f'\n|>[B]')
+                    
+                ai_text = ai_text.replace('\n', '\n  ')
+                ai_short = ai_text[:800] + ("..." if len(ai_text) > 800 else "")
+                
+                pdf.set_text_color(*COLOR_DARK)
+                pdf.set_fill_color(235, 245, 255)
+                pdf.multi_cell(0, 4, _safe_text(f"  AI Verify: {ai_short}"), fill=True)
+                pdf.ln(1)
 
             pdf.cell(0, 4, _safe_text(f"  Response Time: {r.elapsed_time:.2f}s"), new_x="LMARGIN", new_y="NEXT")
 
@@ -384,10 +424,10 @@ def generate_pdf_report(
         pdf.set_font("MalgunGothic", "", 7)
         for vi, r in enumerate(vulns, 1):
             cat_name_short = CATEGORY_NAMES_PDF.get(r.category, r.category)
-            prompt_short = r.prompt[:40].replace("\n", " ")
-            if len(r.prompt) > 40:
+            prompt_short = r.prompt[:20].replace("\n", " ")
+            if len(r.prompt) > 20:
                 prompt_short += "..."
-            detail_short = (r.detection_detail or "-")[:40]
+            detail_short = (r.detection_detail or "-")[:20]
 
             bg = COLOR_WHITE if vi % 2 == 0 else COLOR_LIGHT_BG
             pdf.set_fill_color(*bg)

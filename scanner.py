@@ -153,7 +153,7 @@ class Scanner:
                 )
 
             try:
-                results = probe.run(self.client, self.detector, progress_callback=progress_callback, max_workers=5)
+                results = probe.run(self.client, self.detector, progress_callback=progress_callback)
             except KeyboardInterrupt:
                 print(f"\n\n{Fore.YELLOW}⚠️  Ctrl+C 감지 — 스캔 중단{Style.RESET_ALL}")
                 break

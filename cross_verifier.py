@@ -40,7 +40,7 @@ def verify_results(results: List, delay: float = 0.0) -> List:
         return results
 
     total = len(results)
-    max_workers = 5
+    max_workers = int(os.environ.get("MAX_WORKERS", 10))
 
     print(f"\n{'═' * 70}")
     print(f"\n{Fore.CYAN}{Style.BRIGHT}🤖 LLM 교차 검증 시작{Style.RESET_ALL}")
