@@ -22,6 +22,7 @@ from probes.encoding import EncodingProbe
 from probes.hallucination import HallucinationProbe
 from probes.code_generation import CodeGenerationProbe
 from probes.special_tokens import SpecialTokensProbe
+from probes.web_vulnerability import WebVulnerabilityProbe
 from report import generate_report
 from cross_verifier import verify_results
 
@@ -37,6 +38,7 @@ PROBE_REGISTRY = {
     "hallucination": HallucinationProbe,
     "code_generation": CodeGenerationProbe,
     "special_tokens": SpecialTokensProbe,
+    "web_vulnerability": WebVulnerabilityProbe,
 }
 
 
